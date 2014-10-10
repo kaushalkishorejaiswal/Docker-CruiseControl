@@ -34,8 +34,8 @@ RUN unzip /cruisecontrol-bin-2.8.4.zip -d /opt/
 RUN mv /opt/cruisecontrol-bin-2.8.4 /opt/cruisecontrol
 
 # Downloading and Installing phpUnderControl
-RUN git clone git://github.com/phpundercontrol/phpUnderControl.git /tmp/
-RUN php /tmp/phpUnderControl/bin/phpuc.php install /opt/cruisecontrol
+RUN git clone git://github.com/phpundercontrol/phpUnderControl.git
+RUN php phpUnderControl/bin/phpuc.php install /opt/cruisecontrol
 RUN ln -s /usr/bin/java /bin/java
 
 # Installing PHPUnderControl pear library
