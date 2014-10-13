@@ -1,52 +1,71 @@
-<project name="PROJECT_NAME" buildafterfailed="false">
-    <plugin name="git" classname="net.sourceforge.cruisecontrol.sourcecontrols.Git"/>
-    <modificationset quietperiod="300">
-      <git localworkingcopy="projects/${project.name}/source/"/>
-    </modificationset>
-    <listeners>
-      <currentbuildstatuslistener file="logs/${project.name}/status.txt"/>
-    </listeners>
-    <schedule interval="300">
-      <ant anthome="apache-ant-1.7.0"
-           buildfile="projects/${project.name}/build.xml"/>
-    </schedule>
-    <log dir="logs/${project.name}">
-      <merge dir="projects/${project.name}/build/logs/"/>
-    </log>
-    <publishers>
-      <!--
-      Copies the generated api documentation into project artifacts directory.
-      -->
-      <artifactspublisher dir="projects/${project.name}/build/api"
-                          dest="artifacts/${project.name}"                          subdirectory="api"/>
-      <!--
-      Copies the generated code coverage report into project artifacts directory.
-      -->
-      <artifactspublisher dir="projects/${project.name}/build/coverage"
-                          dest="artifacts/${project.name}"
-                          subdirectory="coverage"/>
-      <!--
-      Generates the different metric charts with the phpUnderControl ezcGraph
-      extension.
-      -->
-      <execute command="phpuc graph logs/${project.name} artifacts/${project.name}"/>
-      <!--
-      Sends simple text emails after a project build. For nicer html emails,
-      checkout the original CruiseControl documentation.
-        * http://cruisecontrol.sourceforge.net/main/configxml.html#email
-        * http://cruisecontrol.sourceforge.net/main/configxml.html#htmlemail
-      -->
+<cruisecontrol>
+    <!--project name="connectfour">
 
-      <!-- <email mailhost="smtp.localhost"
-             username="username"
-             password="password"
-             returnaddress="build@php-example.com"
-             buildresultsurl="http://build.php-example.com/buildresults/${project.name}"
-             skipusers="true"
-             spamwhilebroken="true">
-        <always address="build@php-example.com"/>
-        <failure address="build@php-example.com"/>
-      </email> -->
-    </publishers>
-  </project>
+        <listeners>
+            <currentbuildstatuslistener file="logs/${project.name}/status.txt"/>
+        </listeners>
 
+        <bootstrappers>
+            <antbootstrapper anthome="apache-ant-1.7.0" buildfile="projects/${project.name}/build.xml" target="clean" />
+        </bootstrappers>
+
+        <modificationset quietperiod="30">
+            <filesystem folder="projects/${project.name}"/>
+        </modificationset>
+
+        <schedule interval="300">
+            <ant anthome="apache-ant-1.7.0" buildfile="projects/${project.name}/build.xml"/>
+        </schedule>
+
+        <log>
+            <merge dir="projects/${project.name}/target/test-results"/>
+        </log>
+
+        <publishers>
+            <onsuccess>
+                <artifactspublisher dest="artifacts/${project.name}" file="projects/${project.name}/target/${project.name}.jar"/>
+            </onsuccess>
+        </publishers>
+
+    </project-->
+    
+    
+    <project name="sandeep" buildafterfailed="false">
+
+        <listeners>
+            <currentbuildstatuslistener file="logs/${project.name}/status.txt"/>
+        </listeners>
+
+        <bootstrappers>
+            <antbootstrapper anthome="apache-ant-1.7.0" buildfile="projects/${project.name}/build.xml" target="clean" />
+        </bootstrappers>
+        
+        <plugin name="git" classname="net.sourceforge.cruisecontrol.sourcecontrols.Git"/>
+        <modificationset quietperiod="60">
+            <!-- touch any file in sandeep project to trigger a build -->
+            <filesystem folder="projects/${project.name}"/>
+            <git localworkingcopy="projects/${project.name}/source/"/>
+        </modificationset>
+
+        <schedule interval="120">
+            <ant anthome="apache-ant-1.7.0" buildfile="projects/${project.name}/build.xml"/>
+        </schedule>
+
+        <log dir="logs/${project.name}">
+            <merge dir="projects/${project.name}/build/logs"/>
+        </log>
+
+        <publishers>
+                <artifactspublisher dest="artifacts/${project.name}" dir="projects/${project.name}/build/api" subdirectory="api"/>
+                
+                <artifactspublisher dest="artifacts/${project.name}" dir="projects/${project.name}/build/coverage" subdirectory="coverage"/>
+                
+                <execute command="/var/www/phpuc/bin/phpuc.php graph logs/${project.name} artifacts/${project.name}"/>
+                
+                <execute command="phpcb --log projects/${project.name}/build/logs --source projects/${project.name}/source --output projects/${project.name}/build/php-code-browser"/>
+                
+                <artifactspublisher dest="artifacts/${project.name}" dir="projects/${project.name}/build/php-code-browser" subdirectory="php-code-browser"/>
+        </publishers>
+
+    </project>
+</cruisecontrol>
