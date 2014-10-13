@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="PROJECT_NAME" default="build" basedir=".">
+  <!--
+  Helper target that initializes the CruiseControl project and creates the base
+  directory structure.
+  -->
+  <target name="init">
+    <!-- Create the source directory -->
+    <mkdir dir="source" />
+
+    <!-- Create the different build directories -->
+    <mkdir dir="build" />
+    <mkdir dir="build/api" />
+    <mkdir dir="build/charts" />
+    <mkdir dir="build/coverage" />
+    <mkdir dir="build/graph" />
+    <mkdir dir="build/logs" />
+
+    <!-- Checkout phpUnderControl trunk into source
+    <exec executable="svn">
+      <arg line="co /path/to/php-example/trunk source" />
+    </exec>-->
+  </target>
+
+  <!--
+  The clean target is used to remove build artefacts of previous builds. Otherwise
+  CruiseControl will present old, maybe successful results, even if your build
+  process fails.
+  -->
+  <target name="clean">
+    <!-- Remove old log files -->
+    <delete>
+      <fileset dir="${basedir}/build/logs" includes="**.*" />
+    </delete>
+    <!-- Remove old api documentation -->
+    <delete>
+      <fileset dir="${basedir}/build/api" includes="**.*" />
+    </delete>
+    <!-- Remove old coverage report -->
+    <delete>
+      <fileset dir="${basedir}/build/coverage" includes="**.*" />
+    </delete>
+        <!-- Remove old graphs -->
+    <delete>
+      <fileset dir="${basedir}/build/graph" includes="**.*" />
+    </delete>
+  </target>
+
+  <!--
+  The default build target for this project. It simply depends on all sub tasks
+  that perform the project build. The sub targets are executed in the listed
+  order.
+
+  1. 'clean' Clean old project build artefacts
+  2. 'checkout' Update project working copy
+  3. 'php-documentor' Generate api documentation
+  4. 'php-codesniffer' Check for coding violations.
+  4. 'pdepend' Code dependency information.
+  4. 'phpcpd' Copy-paste detection.
+  4. 'phpmd' Mess detection.
+  5. 'phpunit' Execute unit tests, generate metrics, coverage etc.
+  -->
+  <target name="build"
+          depends="clean,checkout,php-documentor,phpmd,php-codesniffer,pdepend,phpcpd,syncCode" />
+
+  <!--
+  Performs an 'svn up' for the working copy.
+  -->
+  <target name="checkout">
+    <exec executable="git" dir="${basedir}/source">
+      <arg line="pull" />
+    </exec>
+  </target>
+
+  <!--
+  Generates the project documentation into the <project>/build/api directory.
+  phpUnderControl uses the command line output of PhpDocumentor that is logged
+  by CruiseControl.
+  -->
+  <target name="php-documentor" depends="init">
+    <exec executable="phpdoc" dir="${basedir}/source">
+      <arg line="-ct type -ue on -t ${basedir}/build/api
+                 -tb /usr/local/zend/share/pear/data/phpUnderControl/data/phpdoc/ -o HTML:Phpuc:phpuc
+                 -d ${basedir}/source/module
+                "/>
+    </exec>
+  </target>
+<!--
+  Execute code sniffer. You can use a different coding standard if
+  you want (standard=Squiz) - check the php-codesniffer docs
+  for more information.
+  -->
+
+  <target name="php-codesniffer" depends="init">
+    <exec executable="phpcs"
+          dir="${basedir}/source"
+          error="/dev/null"
+          output="${basedir}/build/logs/checkstyle.xml">
+      <arg line="--report=checkstyle
+                 --standard=PSR2
+                 --extensions=php
+                 --tab-width=4
+                 -n
+                 ./module ./vendor/PROJECT_NAME"/>
+    </exec>
+  </target>
+
+  <!--
+  Checks that the project source does not contain any 'mess'.
+  -->
+  <target name="phpmd" depends="init">
+    <exec executable="phpmd" failonerror="false">
+      <arg line="${basedir}/source/module/ xml codesize,unusedcode,naming --reportfile ${basedir}/build/logs/pmd.xml --ignore *.phtml " />
+    </exec>
+  </target>
+
+   <!--
+  Copy-paste detection.
+  -->
+  <target name="phpcpd" depends="init">
+    <exec executable="phpcpd" failonerror="false">
+        <arg line="--log-pmd ${basedir}/build/logs/pmd-cpd.xml ${basedir}/source/module ${basedir}/source/vendor/PROJECT_NAME" />
+    </exec>
+  </target>
+
+  <!--
+  Calculates dependencies and adds new graphs to the metrics page. -->
+
+  <target name="pdepend" depends="init">
+    <exec executable="pdepend" dir="${basedir}/source" logerror="on">
+        <arg line="--summary-xml=${basedir}/build/logs/pdepend.xml --jdepend-chart=${basedir}/build/charts/jdepend.svg --overview-pyramid=${basedir}/build/charts/overview-pyramid.svg --coderank-mode=inheritance,property,method /opt/cruisecontrol/projects/PROJECT_NAME/source/module " />
+    </exec>
+  </target>
+
+  <target name="syncCode" depends="init">
+    <exec executable="rsync"  dir="${basedir}/source">
+	<arg line="-avz 
+		   --progress 
+		   --exclude 'git*' 
+                   --exclude 'tmp'
+		   --exclude 'config/autoload/db.php'
+                   /opt/cruisecontrol/projects/PROJECT_NAME/source/
+                   /var/www/PROJECT_NAMECode/" />
+
+    </exec>
+  </target>
+
+
+</project>
