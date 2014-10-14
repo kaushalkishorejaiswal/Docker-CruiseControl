@@ -63,6 +63,9 @@ RUN pear install --alldeps phpunit/phpcpd
 
 # Installing PHPMD pear library
 RUN pear install phpmd/PHP_PMD
+RUN pear install phpunit/PHP_CodeBrowser
+RUN pear install phpunit/PHP_CodeCoverage
+RUN pear install phpunit/PHPUnit 
 
 # Adding cruisecontrol service file
 ADD cruisecontrol /etc/init.d/cruisecontrol
