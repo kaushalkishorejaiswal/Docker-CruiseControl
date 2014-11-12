@@ -30,7 +30,7 @@
     </project-->
     
     
-    <project name="sandeep" buildafterfailed="false">
+    <project name="ProjectName" buildafterfailed="false">
 
         <listeners>
             <currentbuildstatuslistener file="logs/${project.name}/status.txt"/>
